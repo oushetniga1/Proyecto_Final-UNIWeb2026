@@ -27,7 +27,7 @@ export default function AdminPanel() {
     await updateDoc(doc(db, "incidentes", id), {
       estado: newStatus
     });
-    fetchIncidents(); // Recargar lista
+    fetchIncidents();
   };
 
   const filteredIncidents = filter === 'todos' 
