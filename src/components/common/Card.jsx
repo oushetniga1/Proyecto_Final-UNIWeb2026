@@ -1,15 +1,19 @@
-import { motion } from 'framer-motion';
-
-export default function Card({ children, className = "", ...props }) {
+export default function Card({
+  children,
+  className = "",
+}) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -6 }}
-      className={`bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl ${className}`}
-      {...props}
+    <div
+      className={`
+        glass
+        rounded-3xl
+        p-8
+        card-hover
+        border border-white/10
+        ${className}
+      `}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

@@ -1,75 +1,258 @@
-import { motion } from 'framer-motion';
-import Card from '../components/common/Card';
-import { AlertTriangle, CheckCircle, Clock, Users } from 'lucide-react';
-import "../pages/Dashboard.css";
+import { motion } from "framer-motion";
+
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Users,
+} from "lucide-react";
+
+import Card from "../components/common/Card";
+import Button from "../components/common/Button";
+
+const stats = [
+  {
+    title: "Reportados",
+    value: "24",
+    icon: AlertTriangle,
+    color: "from-orange-500 to-red-500",
+  },
+  {
+    title: "En Proceso",
+    value: "12",
+    icon: Clock,
+    color: "from-cyan-500 to-blue-500",
+  },
+  {
+    title: "Resueltos",
+    value: "68",
+    icon: CheckCircle,
+    color: "from-emerald-500 to-green-500",
+  },
+  {
+    title: "Usuarios",
+    value: "142",
+    icon: Users,
+    color: "from-purple-500 to-pink-500",
+  },
+];
 
 export default function Dashboard() {
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-5xl font-bold mb-2">Bienvenido a UniReport</h1>
-        <p className="text-xl text-slate-400 mb-12">Reporta y sigue el estado de las incidencias de la universidad</p>
-      </motion.div>
+    <div className="page-container">
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-orange-500/10 rounded-2xl">
-              <AlertTriangle className="text-orange-400" size={32} />
-            </div>
-            <div>
-              <p className="text-4xl font-bold">24</p>
-              <p className="text-slate-400">Reportados</p>
-            </div>
-          </div>
-        </Card>
+      {/* HERO */}
+      <section
+        className="
+          relative
+          overflow-hidden
+          rounded-[40px]
+          glass
+          p-12
+          mb-16
+        "
+      >
 
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-blue-500/10 rounded-2xl">
-              <Clock className="text-blue-400" size={32} />
-            </div>
-            <div>
-              <p className="text-4xl font-bold">12</p>
-              <p className="text-slate-400">En Proceso</p>
-            </div>
-          </div>
-        </Card>
+        {/* Glow */}
+        <div
+          className="
+            absolute
+            -top-32
+            -right-32
+            w-96
+            h-96
+            bg-cyan-500/20
+            blur-[120px]
+            rounded-full
+          "
+        />
 
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-emerald-500/10 rounded-2xl">
-              <CheckCircle className="text-emerald-400" size={32} />
-            </div>
-            <div>
-              <p className="text-4xl font-bold">68</p>
-              <p className="text-slate-400">Resueltos</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-purple-500/10 rounded-2xl">
-              <Users className="text-purple-400" size={32} />
-            </div>
-            <div>
-              <p className="text-4xl font-bold">142</p>
-              <p className="text-slate-400">Total</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="text-center">
-        <motion.a
-          href="/report"
-          whileHover={{ scale: 1.05 }}
-          className="inline-block bg-gradient-to-r from-primary-600 to-cyan-500 text-white font-semibold text-xl px-12 py-5 rounded-3xl shadow-2xl"
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10"
         >
-          Reportar Nueva Incidencia →
-        </motion.a>
-      </div>
+
+          <h1
+            className="
+              text-6xl
+              md:text-7xl
+              font-extrabold
+              leading-tight
+              mb-6
+            "
+          >
+            Plataforma Inteligente
+            <br />
+
+            <span className="gradient-text">
+              UniReport
+            </span>
+
+          </h1>
+
+          <p
+            className="
+              text-slate-400
+              text-xl
+              max-w-3xl
+              mb-10
+            "
+          >
+            Reporta incidencias universitarias
+            en tiempo real con estadísticas,
+            seguimiento y administración avanzada.
+          </p>
+
+          <div className="flex gap-6 flex-wrap">
+
+            <Button className="text-lg px-10 py-5">
+              Reportar Incidencia
+            </Button>
+
+            <Button
+              className="
+                bg-white/5
+                border
+                border-white/10
+              "
+            >
+              Ver Estadísticas
+            </Button>
+
+          </div>
+
+        </motion.div>
+
+      </section>
+
+      {/* STATS */}
+      <section
+        className="
+          grid
+          grid-cols-1
+          md:grid-cols-2
+          xl:grid-cols-4
+          gap-8
+          mb-16
+        "
+      >
+
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+
+          return (
+            <motion.div
+              key={stat.title}
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: index * 0.1,
+              }}
+            >
+
+              <Card>
+
+                <div className="flex justify-between items-center">
+
+                  <div>
+
+                    <p className="text-slate-400 mb-2">
+                      {stat.title}
+                    </p>
+
+                    <h2 className="text-5xl font-bold">
+                      {stat.value}
+                    </h2>
+
+                  </div>
+
+                  <div
+                    className={`
+                      w-20
+                      h-20
+                      rounded-3xl
+                      bg-gradient-to-br
+                      ${stat.color}
+                      flex
+                      items-center
+                      justify-center
+                    `}
+                  >
+                    <Icon size={38} />
+                  </div>
+
+                </div>
+
+              </Card>
+
+            </motion.div>
+          );
+        })}
+
+      </section>
+
+      {/* ACTIVIDAD */}
+      <section>
+
+        <div className="flex justify-between items-center mb-8">
+
+          <h2 className="text-4xl font-bold">
+            Actividad Reciente
+          </h2>
+
+          <p className="text-slate-400">
+            Últimos reportes realizados
+          </p>
+
+        </div>
+
+        <div className="grid gap-6">
+
+          {[1,2,3].map((item) => (
+            <Card key={item}>
+
+              <div className="flex justify-between items-center">
+
+                <div>
+
+                  <h3 className="text-2xl font-bold mb-2">
+                    Incidencia #{item}
+                  </h3>
+
+                  <p className="text-slate-400">
+                    Problema reportado en Bloque A
+                  </p>
+
+                </div>
+
+                <div
+                  className="
+                    px-5
+                    py-2
+                    rounded-2xl
+                    bg-cyan-500/20
+                    text-cyan-400
+                  "
+                >
+                  En proceso
+                </div>
+
+              </div>
+
+            </Card>
+          ))}
+
+        </div>
+
+      </section>
+
     </div>
   );
 }
