@@ -1,51 +1,55 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import Navbar from "./components/common/Navbar";
+import Navbar from "./components/common/Navbar.jsx";
 
-import Dashboard from "./pages/Dashboard";
-import ReportIncident from "./pages/ReportIncident";
-import MyIncidents from "./pages/MyIncidents";
-import Statistics from "./pages/Statistics";
-import AdminPanel from "./pages/AdminPanel";
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import ReportIncident from './pages/ReportIncident';
+import MyIncidents from './pages/MyIncidents';
+import Statistics from './pages/Statistics';
+import AdminPanel from './pages/AdminPanel';
+
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
+
   return (
     <Router>
 
-      <Navbar />
+      <div className="app-container">
 
-      <Routes>
+        <Navbar />
 
-        <Route
-          path="/"
-          element={<Dashboard />}
-        />
+        <Routes>
 
-        <Route
-          path="/report"
-          element={<ReportIncident />}
-        />
+          <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/my-incidents"
-          element={<MyIncidents />}
-        />
+          <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/statistics"
-          element={<Statistics />}
-        />
+          <Route element={<ProtectedRoute />}>
 
-        <Route
-          path="/admin"
-          element={<AdminPanel />}
-        />
+            <Route path="/" element={<Dashboard />} />
 
-      </Routes>
+            <Route path="/report" element={<ReportIncident />} />
+
+            <Route path="/my-incidents" element={<MyIncidents />} />
+
+            <Route path="/statistics" element={<Statistics />} />
+
+          </Route>
+
+          <Route
+            element={<ProtectedRoute adminOnly={true} />}
+          >
+
+            <Route path="/admin" element={<AdminPanel />} />
+
+          </Route>
+
+        </Routes>
+
+      </div>
 
     </Router>
   );

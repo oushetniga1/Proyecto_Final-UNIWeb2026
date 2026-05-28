@@ -1,73 +1,144 @@
-import { motion } from "framer-motion";
+import { useEffect, useState } from 'react';
 
-import Card from "../components/common/Card";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
 
-const incidents = [
-  {
-    id: 1,
-    title: "Daño en proyector",
-    status: "En proceso",
-    location: "Bloque B",
-  },
-  {
-    id: 2,
-    title: "Fuga de agua",
-    status: "Reportado",
-    location: "Cafetería",
-  },
-];
+import { db } from '../firebase/config';
+
+import { useAuth } from '../context/AuthContext';
 
 export default function MyIncidents() {
-  return (
-    <div className="page-container">
 
-      <h1 className="text-5xl font-bold mb-12">
-        Mis Incidencias
+  const { user } = useAuth();
+
+  const [incidents, setIncidents] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+
+    const fetchIncidents = async () => {
+
+      try {
+
+        const q = query(
+
+          collection(db, 'incidentes'),
+
+          where('usuarioId', '==', user.uid),
+
+          orderBy('fechaCreacion', 'desc')
+
+        );
+
+        const snapshot = await getDocs(q);
+
+        const data = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        setIncidents(data);
+
+      } catch (error) {
+
+        console.error(error);
+
+      } finally {
+
+        setLoading(false);
+
+      }
+    };
+
+    if (user) {
+
+      fetchIncidents();
+
+    }
+
+  }, [user]);
+
+  if (loading) {
+
+    return (
+      <div className="text-center py-20">
+        Cargando reportes...
+      </div>
+    );
+  }
+
+  return (
+
+    <div className="max-w-6xl mx-auto px-6 py-12">
+
+      <h1 className="text-5xl font-bold mb-10">
+        Mis Reportes
       </h1>
 
-      <div className="grid gap-8">
+      {
+        incidents.length === 0
+          ? (
+            <p className="text-slate-400">
+              No tienes reportes todavía.
+            </p>
+          )
+          : (
+            <div className="grid gap-6">
 
-        {incidents.map((incident, index) => (
-          <motion.div
-            key={incident.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
+              {
+                incidents.map((inc) => (
 
-            <Card>
+                  <div
+                    key={inc.id}
+                    className="bg-slate-900 border border-white/10 rounded-3xl p-6"
+                  >
 
-              <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mb-4">
 
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">
-                    {incident.title}
-                  </h2>
+                      <h2 className="text-2xl font-bold">
+                        {inc.tipo}
+                      </h2>
 
-                  <p className="text-slate-400">
-                    {incident.location}
-                  </p>
-                </div>
+                      <span className="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl">
+                        {inc.estado}
+                      </span>
 
-                <div
-                  className="
-                    px-5 py-2
-                    rounded-2xl
-                    bg-cyan-500/20
-                    text-cyan-400
-                  "
-                >
-                  {incident.status}
-                </div>
+                    </div>
 
-              </div>
+                    <p className="text-slate-300 mb-4">
+                      {inc.descripcion}
+                    </p>
 
-            </Card>
+                    <p className="text-slate-400">
+                      📍 {inc.ubicacionTexto}
+                    </p>
 
-          </motion.div>
-        ))}
+                    {
+                      inc.imagenURL && (
 
-      </div>
+                        <img
+                          src={inc.imagenURL}
+                          alt="incidente"
+                          className="mt-5 rounded-2xl w-full max-h-96 object-cover"
+                        />
+
+                      )
+                    }
+
+                  </div>
+                ))
+              }
+
+            </div>
+          )
+      }
+
     </div>
   );
 }

@@ -1,33 +1,56 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState
+} from "react";
+
+import {
+  onAuthStateChanged,
+  signOut
+} from "firebase/auth";
+
+import { auth } from "../firebase/config";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+
   const [user, setUser] = useState(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
 
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-    } catch (error) {
-      console.error("Error cargando usuario:", error);
-    } finally {
-      setLoading(false);
-    }
+    const unsubscribe =
+      onAuthStateChanged(auth, (currentUser) => {
+
+        if (currentUser) {
+
+          setUser({
+            uid: currentUser.uid,
+            email: currentUser.email,
+            role: "admin"
+          });
+
+        } else {
+
+          setUser(null);
+
+        }
+
+        setLoading(false);
+
+      });
+
+    return () => unsubscribe();
+
   }, []);
 
-  const login = (userData) => {
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
-  };
+  const logout = async () => {
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
+    await signOut(auth);
+
   };
 
   return (
@@ -35,8 +58,7 @@ export function AuthProvider({ children }) {
       value={{
         user,
         loading,
-        login,
-        logout,
+        logout
       }}
     >
       {children}

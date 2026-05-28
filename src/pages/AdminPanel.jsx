@@ -1,78 +1,196 @@
-import AdminSidebar from "../components/admin/AdminSidebar";
+import { useEffect, useState } from 'react';
 
-import Card from "../components/common/Card";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  updateDoc,
+  doc
+} from 'firebase/firestore';
 
-const incidents = [
-  {
-    id: 1,
-    title: "Daño eléctrico",
-    status: "Reportado",
-    location: "Bloque A",
-  },
-  {
-    id: 2,
-    title: "Internet caído",
-    status: "Proceso",
-    location: "Biblioteca",
-  },
-];
+import { db } from '../firebase/config';
 
 export default function AdminPanel() {
+
+  const [incidents, setIncidents] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const fetchIncidents = async () => {
+
+    try {
+
+      const q = query(
+
+        collection(db, 'incidentes'),
+
+        orderBy('fechaCreacion', 'desc')
+
+      );
+
+      const snapshot = await getDocs(q);
+
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      setIncidents(data);
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
+
+  useEffect(() => {
+
+    fetchIncidents();
+
+  }, []);
+
+  const changeStatus = async (
+    id,
+    estado
+  ) => {
+
+    try {
+
+      await updateDoc(
+
+        doc(db, 'incidentes', id),
+
+        {
+          estado
+        }
+
+      );
+
+      fetchIncidents();
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+  };
+
+  if (loading) {
+
+    return (
+      <div className="text-center py-20">
+        Cargando incidencias...
+      </div>
+    );
+  }
+
   return (
-    <div className="flex">
 
-      <AdminSidebar />
+    <div className="max-w-7xl mx-auto px-6 py-12">
 
-      <div className="flex-1 page-container">
+      <h1 className="text-5xl font-bold mb-10">
+        Panel Administrador
+      </h1>
 
-        <div className="mb-12">
+      <div className="grid gap-6">
 
-          <h1 className="text-5xl font-bold mb-3">
-            Administración
-          </h1>
+        {
+          incidents.map((inc) => (
 
-          <p className="text-slate-400">
-            Gestión avanzada de incidencias
-          </p>
+            <div
+              key={inc.id}
+              className="bg-slate-900 border border-white/10 rounded-3xl p-6"
+            >
 
-        </div>
-
-        <div className="grid gap-8">
-
-          {incidents.map((incident) => (
-            <Card key={incident.id}>
-
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mb-4">
 
                 <div>
 
-                  <h2 className="text-2xl font-bold mb-2">
-                    {incident.title}
+                  <h2 className="text-3xl font-bold">
+                    {inc.tipo}
                   </h2>
 
-                  <p className="text-slate-400">
-                    {incident.location}
+                  <p className="text-slate-400 mt-1">
+                    {inc.usuarioEmail}
                   </p>
 
                 </div>
 
-                <div
-                  className="
-                    px-5 py-2
-                    rounded-2xl
-                    bg-cyan-500/20
-                    text-cyan-400
-                  "
-                >
-                  {incident.status}
-                </div>
+                <span className="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl">
+                  {inc.estado}
+                </span>
 
               </div>
 
-            </Card>
-          ))}
+              <p className="text-slate-300 mb-4">
+                {inc.descripcion}
+              </p>
 
-        </div>
+              <p className="text-slate-400 mb-5">
+                📍 {inc.ubicacionTexto}
+              </p>
+
+              {
+                inc.imagenURL && (
+
+                  <img
+                    src={inc.imagenURL}
+                    alt="incidente"
+                    className="rounded-2xl w-full max-h-96 object-cover mb-6"
+                  />
+
+                )
+              }
+
+              <div className="flex gap-4 flex-wrap">
+
+                <button
+                  onClick={() =>
+                    changeStatus(
+                      inc.id,
+                      'Reportado'
+                    )
+                  }
+                  className="bg-orange-500 px-5 py-3 rounded-2xl"
+                >
+                  Reportado
+                </button>
+
+                <button
+                  onClick={() =>
+                    changeStatus(
+                      inc.id,
+                      'En proceso'
+                    )
+                  }
+                  className="bg-blue-500 px-5 py-3 rounded-2xl"
+                >
+                  En proceso
+                </button>
+
+                <button
+                  onClick={() =>
+                    changeStatus(
+                      inc.id,
+                      'Resuelto'
+                    )
+                  }
+                  className="bg-emerald-500 px-5 py-3 rounded-2xl"
+                >
+                  Resuelto
+                </button>
+
+              </div>
+
+            </div>
+          ))
+        }
 
       </div>
 

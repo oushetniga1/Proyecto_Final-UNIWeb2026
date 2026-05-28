@@ -123,7 +123,25 @@ export default function Dashboard() {
           </div>
 
         </motion.div>
+        {/* LOGO UNIVERSIDAD */}
 
+        <img
+          src="./img/LOGOUAWA.png"
+          alt="Logo Universidad de la Amazonia"
+          className="
+                absolute
+                -right-20
+                top-2/3
+                -translate-y-1/2
+                w-[650px]
+                opacity-[0.5]
+                blur-[1px]
+                pointer-events-none
+                select-none
+                hidden
+                lg:block
+                      "
+        />
       </section>
 
       {/* STATS */}
@@ -215,7 +233,7 @@ export default function Dashboard() {
 
         <div className="grid gap-6">
 
-          {[1,2,3].map((item) => (
+          {[1, 2, 3].map((item) => (
             <Card key={item}>
 
               <div className="flex justify-between items-center">

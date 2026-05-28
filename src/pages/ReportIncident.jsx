@@ -1,159 +1,237 @@
-import { motion } from "framer-motion";
-import { Upload, MapPin } from "lucide-react";
+import { useState } from 'react';
 
-import Card from "../components/common/Card";
-import Button from "../components/common/Button";
+import {
+  collection,
+  addDoc,
+  serverTimestamp
+} from 'firebase/firestore';
+
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from 'firebase/storage';
+
+import { db, storage } from '../firebase/config';
+
+import { useAuth } from '../context/AuthContext';
 
 export default function ReportIncident() {
-  return (
-    <div className="page-container">
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+  const { user } = useAuth();
+
+  const [tipo, setTipo] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [ubicacionTexto, setUbicacionTexto] = useState('');
+  const [imagen, setImagen] = useState(null);
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+
+    e.preventDefault();
+
+    try {
+
+      setLoading(true);
+      console.log("Iniciando reporte...");
+      let imagenURL = '';
+
+      // SUBIR IMAGEN
+      if (imagen) {
+
+        const storageRef = ref(
+          storage,
+          `incidentes/${Date.now()}_${imagen.name}`
+        );
+
+        console.log("Subiendo imagen...");
+        await uploadBytes(storageRef, imagen);
+        console.log("Imagen subida");
+
+        console.log("Obteniendo URL...");
+        imagenURL =
+          await getDownloadURL(storageRef);
+        console.log("URL obtenida:", imagenURL);
+
+      }
+      console.log("Guardando en Firestore...");
+
+      // GUARDAR INCIDENTE
+      await addDoc(
+
+        collection(db, 'incidentes'),
+
+        {
+
+          tipo,
+          descripcion,
+          ubicacionTexto,
+
+          imagenURL,
+
+          usuarioEmail: user.email,
+          usuarioId: user.uid,
+          
+
+          estado: 'Reportado',
+
+          fechaCreacion: serverTimestamp()
+
+        }
+      );
+
+      console.log("Incidente guardado");
+
+      setTipo('');
+      setDescripcion('');
+      setUbicacionTexto('');
+      setImagen(null);
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(error.message);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
+
+  return (
+
+    <div className="max-w-3xl mx-auto px-6 py-12">
+
+      <h1 className="text-5xl font-bold mb-10">
+        Reportar Incidente
+      </h1>
+
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-slate-900 p-10 rounded-3xl border border-white/10"
       >
 
-        <Card>
+        {/* Tipo */}
+        <div>
 
-          <h1 className="text-5xl font-bold mb-3">
-            Reportar Incidencia
-          </h1>
+          <label className="block mb-2 text-slate-300">
+            Tipo de incidente
+          </label>
 
-          <p className="text-slate-400 mb-12">
-            Completa el formulario para registrar
-            una incidencia en la universidad.
-          </p>
+          <select
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            required
+            className="w-full p-4 rounded-2xl bg-slate-800 border border-white/10"
+          >
 
-          <form className="space-y-8">
+            <option value="">
+              Selecciona
+            </option>
 
-            {/* Tipo */}
-            <div>
-              <label className="block mb-3 text-sm text-slate-300">
-                Tipo de incidencia
-              </label>
+            <option value="Daño eléctrico">
+              Daño eléctrico
+            </option>
 
-              <select
-                className="
-                  w-full
-                  glass
-                  rounded-2xl
-                  p-4
-                  bg-transparent
-                  outline-none
-                "
-              >
-                <option className="bg-slate-900">
-                  Infraestructura
-                </option>
+            <option value="Daño estructural">
+              Daño estructural
+            </option>
 
-                <option className="bg-slate-900">
-                  Seguridad
-                </option>
+            <option value="Basura">
+              Basura
+            </option>
 
-                <option className="bg-slate-900">
-                  Tecnología
-                </option>
+            <option value="Seguridad">
+              Seguridad
+            </option>
 
-                <option className="bg-slate-900">
-                  Mantenimiento
-                </option>
-              </select>
-            </div>
+            <option value="Otro">
+              Otro
+            </option>
 
-            {/* Descripción */}
-            <div>
-              <label className="block mb-3 text-sm text-slate-300">
-                Descripción
-              </label>
+          </select>
 
-              <textarea
-                rows="6"
-                placeholder="Describe detalladamente la incidencia..."
-                className="
-                  w-full
-                  glass
-                  rounded-2xl
-                  p-4
-                  bg-transparent
-                  outline-none
-                  resize-none
-                "
-              />
-            </div>
+        </div>
 
-            {/* Upload */}
-            <div>
-              <label className="block mb-3 text-sm text-slate-300">
-                Evidencia Fotográfica
-              </label>
+        {/* Descripción */}
+        <div>
 
-              <div
-                className="
-                  glass
-                  rounded-3xl
-                  p-10
-                  border-2
-                  border-dashed
-                  border-white/10
-                  text-center
-                "
-              >
-                <Upload
-                  size={60}
-                  className="mx-auto mb-5 text-cyan-400"
-                />
+          <label className="block mb-2 text-slate-300">
+            Descripción
+          </label>
 
-                <p className="text-lg mb-2">
-                  Arrastra una imagen aquí
-                </p>
+          <textarea
+            value={descripcion}
+            onChange={(e) =>
+              setDescripcion(e.target.value)
+            }
+            required
+            rows="5"
+            placeholder="Describe el problema..."
+            className="w-full p-4 rounded-2xl bg-slate-800 border border-white/10"
+          />
 
-                <p className="text-slate-400 text-sm">
-                  PNG, JPG o JPEG
-                </p>
-              </div>
-            </div>
+        </div>
 
-            {/* Ubicación */}
-            <div>
-              <label className="block mb-3 text-sm text-slate-300">
-                Ubicación
-              </label>
+        {/* Ubicación */}
+        <div>
 
-              <div className="relative">
-                <MapPin
-                  className="
-                    absolute
-                    left-4
-                    top-1/2
-                    -translate-y-1/2
-                    text-cyan-400
-                  "
-                />
+          <label className="block mb-2 text-slate-300">
+            Ubicación
+          </label>
 
-                <input
-                  type="text"
-                  placeholder="Ej: Bloque A - Aula 204"
-                  className="
-                    w-full
-                    glass
-                    rounded-2xl
-                    p-4
-                    pl-14
-                    bg-transparent
-                    outline-none
-                  "
-                />
-              </div>
-            </div>
+          <input
+            type="text"
+            value={ubicacionTexto}
+            onChange={(e) =>
+              setUbicacionTexto(e.target.value)
+            }
+            required
+            placeholder="Ej: Bloque A - Salón 204"
+            className="w-full p-4 rounded-2xl bg-slate-800 border border-white/10"
+          />
 
-            <Button className="w-full text-lg py-5 rounded-3xl">
-              Enviar Reporte
-            </Button>
+        </div>
 
-          </form>
-        </Card>
-      </motion.div>
+        {/* Imagen */}
+        <div>
+
+          <label className="block mb-2 text-slate-300">
+            Fotografía
+          </label>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setImagen(e.target.files[0])
+            }
+            required
+            className="w-full p-4 rounded-2xl bg-slate-800 border border-white/10"
+          />
+
+        </div>
+
+        {/* Botón */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 transition p-4 rounded-2xl font-semibold"
+        >
+
+          {
+            loading
+              ? 'Reportando...'
+              : 'Enviar Reporte'
+          }
+
+        </button>
+
+      </form>
+
     </div>
   );
 }
