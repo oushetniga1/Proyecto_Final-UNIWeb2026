@@ -10,7 +10,15 @@ import {
   signOut
 } from "firebase/auth";
 
-import { auth } from "../firebase/config";
+import {
+  doc,
+  getDoc
+} from "firebase/firestore";
+
+import {
+  auth,
+  db
+} from "../firebase/config";
 
 const AuthContext = createContext();
 
@@ -23,25 +31,81 @@ export function AuthProvider({ children }) {
   useEffect(() => {
 
     const unsubscribe =
-      onAuthStateChanged(auth, (currentUser) => {
+      onAuthStateChanged(
+        auth,
+        async (firebaseUser) => {
 
-        if (currentUser) {
+          console.log(
+            "FIREBASE USER:",
+            firebaseUser
+          );
 
-          setUser({
-            uid: currentUser.uid,
-            email: currentUser.email,
-            role: "admin"
-          });
+          try {
 
-        } else {
+            if (firebaseUser) {
 
-          setUser(null);
+              let role = "admin";
 
+              try {
+
+                const userRef = doc(
+                  db,
+                  "usuarios",
+                  firebaseUser.uid
+                );
+
+                const userSnap =
+                  await getDoc(userRef);
+
+                if (userSnap.exists()) {
+
+                  role =
+                    userSnap.data().role;
+
+                }
+
+              } catch (err) {
+
+                console.log(
+                  "No se pudo leer rol"
+                );
+
+              }
+
+              const userData = {
+
+                uid: firebaseUser.uid,
+
+                email: firebaseUser.email,
+
+                role
+
+              };
+
+              console.log(
+                "USER DATA:",
+                userData
+              );
+
+              setUser(userData);
+
+            } else {
+
+              setUser(null);
+
+            }
+
+          } catch (error) {
+
+            console.error(error);
+
+          } finally {
+
+            setLoading(false);
+
+          }
         }
-
-        setLoading(false);
-
-      });
+      );
 
     return () => unsubscribe();
 
@@ -54,6 +118,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
+
     <AuthContext.Provider
       value={{
         user,
@@ -61,11 +126,16 @@ export function AuthProvider({ children }) {
         logout
       }}
     >
+
       {children}
+
     </AuthContext.Provider>
+
   );
 }
 
 export function useAuth() {
+
   return useContext(AuthContext);
+
 }

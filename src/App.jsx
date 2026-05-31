@@ -1,4 +1,10 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route
+} from 'react-router-dom';
+
+import { AuthProvider } from './context/AuthContext';
 
 import Navbar from "./components/common/Navbar.jsx";
 
@@ -9,49 +15,88 @@ import ReportIncident from './pages/ReportIncident';
 import MyIncidents from './pages/MyIncidents';
 import Statistics from './pages/Statistics';
 import AdminPanel from './pages/AdminPanel';
-
+import MapIncidents from './pages/MapIncidents';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
 
   return (
-    <Router>
 
-      <div className="app-container">
+    <AuthProvider>
 
-        <Navbar />
+      <Router>
 
-        <Routes>
+        <div className="app-container">
 
-          <Route path="/login" element={<Login />} />
+          <Navbar />
 
-          <Route path="/register" element={<Register />} />
+          <Routes>
 
-          <Route element={<ProtectedRoute />}>
+            <Route
+              path="/login"
+              element={<Login />}
+            />
 
-            <Route path="/" element={<Dashboard />} />
+            <Route
+              path="/register"
+              element={<Register />}
+            />
 
-            <Route path="/report" element={<ReportIncident />} />
+            {/* RUTAS PROTEGIDAS */}
 
-            <Route path="/my-incidents" element={<MyIncidents />} />
+            <Route element={<ProtectedRoute />}>
 
-            <Route path="/statistics" element={<Statistics />} />
+              <Route
+                path="/"
+                element={<Dashboard />}
+              />
 
-          </Route>
+              <Route
+                path="/report"
+                element={<ReportIncident />}
+              />
 
-          <Route
-            element={<ProtectedRoute adminOnly={true} />}
-          >
+              <Route
+                path="/my-incidents"
+                element={<MyIncidents />}
+              />
 
-            <Route path="/admin" element={<AdminPanel />} />
+              <Route
+                path="/statistics"
+                element={<Statistics />}
+              />
 
-          </Route>
+              {/* 🔥 MUEVELO AQUI */}
+              <Route
+                path="/map"
+                element={<MapIncidents />}
+              />
 
-        </Routes>
+            </Route>
 
-      </div>
 
-    </Router>
+            {/* ADMIN */}
+
+            <Route
+              element={
+                <ProtectedRoute adminOnly />
+              }
+            >
+
+              <Route
+                path="/admin"
+                element={<AdminPanel />}
+              />
+
+            </Route>
+
+          </Routes>
+
+        </div>
+
+      </Router>
+
+    </AuthProvider >
   );
 }
 

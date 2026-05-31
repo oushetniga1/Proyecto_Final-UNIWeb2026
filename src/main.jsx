@@ -1,12 +1,10 @@
 import React from 'react';
 
 import ReactDOM from 'react-dom/client';
-
+import 'leaflet/dist/leaflet.css';
 import App from './App.jsx';
 
 import './index.css';
-
-import { AuthProvider } from './context/AuthContext.jsx';
 
 ReactDOM.createRoot(
   document.getElementById('root')
@@ -14,11 +12,7 @@ ReactDOM.createRoot(
 
   <React.StrictMode>
 
-    <AuthProvider>
-
-      <App />
-
-    </AuthProvider>
+    <App />
 
   </React.StrictMode>
 

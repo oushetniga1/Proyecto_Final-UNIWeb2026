@@ -20,13 +20,15 @@ export default function Login() {
       setError('');
 
       const userCredential =
+      
         await signInWithEmailAndPassword(
+
           auth,
           email,
           password
         );
 
-      navigate('/');
+      window.location.href = "/";
 
     } catch (err) {
       console.error(err);

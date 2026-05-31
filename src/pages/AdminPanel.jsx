@@ -1,42 +1,58 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 import {
   collection,
-  getDocs,
+  onSnapshot,
   query,
   orderBy,
   updateDoc,
+  getDocs,
   doc
-} from 'firebase/firestore';
+} from "firebase/firestore";
 
-import { db } from '../firebase/config';
+import {
+  deleteDoc
+} from "firebase/firestore";
+
+import { db } from "../firebase/config";
+
+import Card from "../components/common/Card";
 
 export default function AdminPanel() {
 
-  const [incidents, setIncidents] = useState([]);
+  const [incidentes, setIncidentes] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
-  const fetchIncidents = async () => {
+  // CARGAR INCIDENTES
+  const cargarIncidentes = async () => {
 
     try {
 
       const q = query(
 
-        collection(db, 'incidentes'),
+        collection(db, "incidentes"),
 
-        orderBy('fechaCreacion', 'desc')
+        orderBy("fechaCreacion", "desc")
 
       );
 
-      const snapshot = await getDocs(q);
+      const querySnapshot = await getDocs(q);
 
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const datos = [];
 
-      setIncidents(data);
+      querySnapshot.forEach((docu) => {
+
+        datos.push({
+
+          id: docu.id,
+          ...docu.data()
+
+        });
+
+      });
+
+      setIncidentes(datos);
 
     } catch (error) {
 
@@ -47,153 +63,341 @@ export default function AdminPanel() {
       setLoading(false);
 
     }
+
   };
 
   useEffect(() => {
 
-    fetchIncidents();
+    const q = query(
+
+      collection(db, "incidentes"),
+
+      orderBy("fechaCreacion", "desc")
+
+    );
+
+    const unsubscribe = onSnapshot(
+
+      q,
+
+      (snapshot) => {
+
+        console.log("Snapshot recibido");
+        console.log("Documentos:", snapshot.size);
+
+        const datos = [];
+
+        snapshot.forEach((docu) => {
+
+          datos.push({
+            id: docu.id,
+            ...docu.data()
+          });
+
+        });
+
+        console.log(datos);
+
+        setIncidentes(datos);
+
+        setLoading(false);
+
+      },
+
+      (error) => {
+
+        console.error("ERROR FIRESTORE:", error);
+
+        setLoading(false);
+
+      }
+
+    );
+
+    return () => unsubscribe();
 
   }, []);
 
-  const changeStatus = async (
-    id,
-    estado
-  ) => {
+  const eliminarIncidencia = async (id) => {
+
+    const confirmar = window.confirm(
+
+      "¿Desea eliminar esta incidencia?"
+
+    );
+
+    if (!confirmar) return;
 
     try {
 
-      await updateDoc(
+      await deleteDoc(
 
-        doc(db, 'incidentes', id),
-
-        {
-          estado
-        }
+        doc(db, "incidentes", id)
 
       );
 
-      fetchIncidents();
+      alert("Incidencia eliminada");
 
     } catch (error) {
 
       console.error(error);
 
     }
+
   };
 
-  if (loading) {
+  const cambiarEstado = async (
+    id,
+    nuevoEstado
+  ) => {
 
-    return (
-      <div className="text-center py-20">
-        Cargando incidencias...
-      </div>
-    );
-  }
+    try {
+
+      const docRef =
+        doc(db, "incidentes", id);
+
+      await updateDoc(
+        docRef,
+        {
+          estado: nuevoEstado
+        }
+      );
+
+      console.log(
+        "Estado actualizado:",
+        nuevoEstado
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
 
   return (
 
+
     <div className="max-w-7xl mx-auto px-6 py-12">
 
-      <h1 className="text-5xl font-bold mb-10">
+      <h1 className="text-5xl font-bold mb-4">
+
         Panel Administrador
+
       </h1>
 
-      <div className="grid gap-6">
+      <p className="text-slate-400 mb-12 text-lg">
 
-        {
-          incidents.map((inc) => (
+        Gestión completa de incidencias universitarias.
 
-            <div
-              key={inc.id}
-              className="bg-slate-900 border border-white/10 rounded-3xl p-6"
-            >
+      </p>
 
-              <div className="flex justify-between items-center mb-4">
+      {loading ? (
 
+        <p>Cargando incidencias...</p>
+
+      ) : (
+
+        <div className="grid gap-8">
+
+          {incidentes.map((incidente) => (
+
+            <Card key={incidente.id}>
+
+              <div className="grid lg:grid-cols-3 gap-8">
+
+                {/* IMAGEN */}
                 <div>
 
-                  <h2 className="text-3xl font-bold">
-                    {inc.tipo}
-                  </h2>
-
-                  <p className="text-slate-400 mt-1">
-                    {inc.usuarioEmail}
-                  </p>
+                  <img
+                    src={incidente.imagenURL}
+                    alt="Incidencia"
+                    className="
+                      w-full
+                      h-72
+                      object-cover
+                      rounded-3xl
+                    "
+                  />
 
                 </div>
 
-                <span className="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl">
-                  {inc.estado}
-                </span>
+                {/* INFORMACIÓN */}
+                <div className="lg:col-span-2">
+
+                  <div className="flex justify-between items-center mb-4">
+
+                    <h2 className="text-3xl font-bold">
+
+                      {incidente.tipo}
+
+                    </h2>
+
+                    <span
+                      className="
+                        px-5
+                        py-2
+                        rounded-2xl
+                        bg-cyan-500/20
+                        text-cyan-400
+                      "
+                    >
+                      {incidente.estado}
+                    </span>
+
+                  </div>
+
+                  <p className="text-slate-300 mb-6 text-lg">
+
+                    {incidente.descripcion}
+
+                  </p>
+
+                  <div className="grid md:grid-cols-2 gap-5 mb-8">
+
+                    <div>
+
+                      <p className="text-slate-500 text-sm">
+                        Usuario
+                      </p>
+
+                      <p>
+                        {incidente.usuarioEmail}
+                      </p>
+
+                    </div>
+
+                    <div>
+
+                      <p className="text-slate-500 text-sm">
+                        Ubicación
+                      </p>
+
+                      <p>
+                        {incidente.ubicacionTexto}
+                      </p>
+
+                    </div>
+
+                    <div>
+
+                      <p className="text-slate-500 text-sm">
+                        Fecha
+                      </p>
+
+                      <p>
+
+                        {
+                          incidente.fechaCreacion?.toDate
+                            ? incidente.fechaCreacion
+                              .toDate()
+                              .toLocaleString()
+                            : "Sin fecha"
+                        }
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  {/* BOTONES */}
+                  <div className="flex flex-wrap gap-4">
+
+                    <button
+                      onClick={() =>
+                        cambiarEstado(
+                          incidente.id,
+                          "Reportado"
+                        )
+                      }
+                      className="
+                        px-6
+                        py-3
+                        rounded-2xl
+                        bg-orange-500
+                        hover:scale-105
+                        transition
+                      "
+                    >
+                      Reportado
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        cambiarEstado(
+                          incidente.id,
+                          "En proceso"
+                        )
+                      }
+                      className="
+                        px-6
+                        py-3
+                        rounded-2xl
+                        bg-blue-500
+                        hover:scale-105
+                        transition
+                      "
+                    >
+                      En proceso
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        cambiarEstado(
+                          incidente.id,
+                          "Resuelto"
+                        )
+                      }
+                      className="
+                        px-6
+                        py-3
+                        rounded-2xl
+                        bg-emerald-500
+                        hover:scale-105
+                        transition
+                      "
+                    >
+                      Resuelto
+                    </button>
+                    <button
+
+                      onClick={() =>
+                        eliminarIncidencia(
+                          incidente.id
+                        )
+                      }
+
+                      className="
+                              px-6
+                              py-3
+                              rounded-2xl
+                              bg-red-600
+                              hover:scale-105
+                              transition
+                            "
+                    >
+                      Eliminar
+
+                    </button>
+
+                  </div>
+
+                </div>
 
               </div>
 
-              <p className="text-slate-300 mb-4">
-                {inc.descripcion}
-              </p>
+            </Card>
 
-              <p className="text-slate-400 mb-5">
-                📍 {inc.ubicacionTexto}
-              </p>
+          ))}
 
-              {
-                inc.imagenURL && (
+        </div>
 
-                  <img
-                    src={inc.imagenURL}
-                    alt="incidente"
-                    className="rounded-2xl w-full max-h-96 object-cover mb-6"
-                  />
-
-                )
-              }
-
-              <div className="flex gap-4 flex-wrap">
-
-                <button
-                  onClick={() =>
-                    changeStatus(
-                      inc.id,
-                      'Reportado'
-                    )
-                  }
-                  className="bg-orange-500 px-5 py-3 rounded-2xl"
-                >
-                  Reportado
-                </button>
-
-                <button
-                  onClick={() =>
-                    changeStatus(
-                      inc.id,
-                      'En proceso'
-                    )
-                  }
-                  className="bg-blue-500 px-5 py-3 rounded-2xl"
-                >
-                  En proceso
-                </button>
-
-                <button
-                  onClick={() =>
-                    changeStatus(
-                      inc.id,
-                      'Resuelto'
-                    )
-                  }
-                  className="bg-emerald-500 px-5 py-3 rounded-2xl"
-                >
-                  Resuelto
-                </button>
-
-              </div>
-
-            </div>
-          ))
-        }
-
-      </div>
+      )}
 
     </div>
+
   );
+
 }

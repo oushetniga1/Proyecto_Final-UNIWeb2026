@@ -95,6 +95,13 @@ export default function Navbar() {
           </Link>
 
           <Link
+            to="/map"
+            className="hover:text-cyan-400 transition"
+          >
+            Mapa
+          </Link>
+          
+          <Link
             to="/admin"
             className="hover:text-cyan-400 transition"
           >

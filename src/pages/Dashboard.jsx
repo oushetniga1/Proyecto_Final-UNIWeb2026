@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { motion } from "framer-motion";
 
 import {
@@ -7,38 +9,116 @@ import {
   Users,
 } from "lucide-react";
 
-import Card from "../components/common/Card";
-import Button from "../components/common/Button";
+import {
+  collection,
+  onSnapshot
+} from "firebase/firestore";
 
-const stats = [
-  {
-    title: "Reportados",
-    value: "24",
-    icon: AlertTriangle,
-    color: "from-orange-500 to-red-500",
-  },
-  {
-    title: "En Proceso",
-    value: "12",
-    icon: Clock,
-    color: "from-cyan-500 to-blue-500",
-  },
-  {
-    title: "Resueltos",
-    value: "68",
-    icon: CheckCircle,
-    color: "from-emerald-500 to-green-500",
-  },
-  {
-    title: "Usuarios",
-    value: "142",
-    icon: Users,
-    color: "from-purple-500 to-pink-500",
-  },
-];
+import { db } from "../firebase/config";
+
+import Card from "../components/common/Card";
+
+import Button from "../components/common/Button";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
+
+  const [stats, setStats] = useState({
+
+    reportados: 0,
+    proceso: 0,
+    resueltos: 0,
+    total: 0
+
+  });
+
+  useEffect(() => {
+
+    const unsubscribe = onSnapshot(
+
+      collection(db, "incidentes"),
+
+      (snapshot) => {
+
+        let reportados = 0;
+        let proceso = 0;
+        let resueltos = 0;
+
+        snapshot.forEach((doc) => {
+
+          const data = doc.data();
+
+          if (data.estado === "Reportado") {
+
+            reportados++;
+
+          } else if (data.estado === "En proceso") {
+
+            proceso++;
+
+          } else if (data.estado === "Resuelto") {
+
+            resueltos++;
+
+          }
+
+        });
+
+        setStats({
+
+          reportados,
+          proceso,
+          resueltos,
+
+          total:
+            reportados +
+            proceso +
+            resueltos
+
+        });
+
+      }
+
+    );
+
+    return () => unsubscribe();
+
+  }, []);
+
+  const cards = [
+
+    {
+      title: "Reportados",
+      value: stats.reportados,
+      icon: AlertTriangle,
+      color: "from-orange-500 to-red-500",
+    },
+
+    {
+      title: "En Proceso",
+      value: stats.proceso,
+      icon: Clock,
+      color: "from-cyan-500 to-blue-500",
+    },
+
+    {
+      title: "Resueltos",
+      value: stats.resueltos,
+      icon: CheckCircle,
+      color: "from-emerald-500 to-green-500",
+    },
+
+    {
+      title: "Total",
+      value: stats.total,
+      icon: Users,
+      color: "from-purple-500 to-pink-500",
+    },
+
+  ];
+
   return (
+
     <div className="page-container">
 
       {/* HERO */}
@@ -53,17 +133,20 @@ export default function Dashboard() {
         "
       >
 
-        {/* Glow */}
-        <div
+        {/* LOGO */}
+        <img
+          src="./img/LOGOUAWA.png"
+          alt="Logo Universidad"
           className="
             absolute
-            -top-32
-            -right-32
-            w-96
-            h-96
-            bg-cyan-500/20
-            blur-[120px]
-            rounded-full
+            right-10
+            top-1/2
+            -translate-y-1/2
+            w-[520px]
+            opacity-[0.08]
+            pointer-events-none
+            hidden
+            lg:block
           "
         />
 
@@ -82,6 +165,7 @@ export default function Dashboard() {
               mb-6
             "
           >
+
             Plataforma Inteligente
             <br />
 
@@ -99,49 +183,39 @@ export default function Dashboard() {
               mb-10
             "
           >
-            Reporta incidencias universitarias
-            en tiempo real con estadísticas,
-            seguimiento y administración avanzada.
+
+            Sistema inteligente para
+            gestión de incidencias
+            universitarias en tiempo real.
+
           </p>
 
           <div className="flex gap-6 flex-wrap">
 
-            <Button className="text-lg px-10 py-5">
-              Reportar Incidencia
-            </Button>
+            <Link to="/report">
+              <Button className="text-lg px-10 py-5">
+                Reportar Incidencia
+              </Button>
+            </Link>
 
-            <Button
-              className="
-                bg-white/5
-                border
-                border-white/10
-              "
-            >
-              Ver Estadísticas
-            </Button>
+            <Link to="/statistics">
+              <Button
+                className="
+                  bg-white/5
+                  border
+                  border-white/10
+                "
+                link="/statistics"
+              >
+                Ver Estadísticas
+              </Button>
+            </Link>
+
 
           </div>
 
         </motion.div>
-        {/* LOGO UNIVERSIDAD */}
 
-        <img
-          src="./img/LOGOUAWA.png"
-          alt="Logo Universidad de la Amazonia"
-          className="
-                absolute
-                -right-20
-                top-2/3
-                -translate-y-1/2
-                w-[650px]
-                opacity-[0.5]
-                blur-[1px]
-                pointer-events-none
-                select-none
-                hidden
-                lg:block
-                      "
-        />
       </section>
 
       {/* STATS */}
@@ -156,10 +230,12 @@ export default function Dashboard() {
         "
       >
 
-        {stats.map((stat, index) => {
+        {cards.map((stat, index) => {
+
           const Icon = stat.icon;
 
           return (
+
             <motion.div
               key={stat.title}
               initial={{
@@ -203,7 +279,9 @@ export default function Dashboard() {
                       justify-center
                     `}
                   >
+
                     <Icon size={38} />
+
                   </div>
 
                 </div>
@@ -211,66 +289,15 @@ export default function Dashboard() {
               </Card>
 
             </motion.div>
+
           );
+
         })}
 
       </section>
 
-      {/* ACTIVIDAD */}
-      <section>
-
-        <div className="flex justify-between items-center mb-8">
-
-          <h2 className="text-4xl font-bold">
-            Actividad Reciente
-          </h2>
-
-          <p className="text-slate-400">
-            Últimos reportes realizados
-          </p>
-
-        </div>
-
-        <div className="grid gap-6">
-
-          {[1, 2, 3].map((item) => (
-            <Card key={item}>
-
-              <div className="flex justify-between items-center">
-
-                <div>
-
-                  <h3 className="text-2xl font-bold mb-2">
-                    Incidencia #{item}
-                  </h3>
-
-                  <p className="text-slate-400">
-                    Problema reportado en Bloque A
-                  </p>
-
-                </div>
-
-                <div
-                  className="
-                    px-5
-                    py-2
-                    rounded-2xl
-                    bg-cyan-500/20
-                    text-cyan-400
-                  "
-                >
-                  En proceso
-                </div>
-
-              </div>
-
-            </Card>
-          ))}
-
-        </div>
-
-      </section>
-
     </div>
+
   );
+
 }

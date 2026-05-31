@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   collection,
@@ -24,7 +24,35 @@ export default function ReportIncident() {
   const [descripcion, setDescripcion] = useState('');
   const [ubicacionTexto, setUbicacionTexto] = useState('');
   const [imagen, setImagen] = useState(null);
+  const [latitud, setLatitud] = useState(null);
 
+  const [longitud, setLongitud] = useState(null);
+  useEffect(() => {
+
+    navigator.geolocation.getCurrentPosition(
+
+      (position) => {
+
+        setLatitud(position.coords.latitude);
+
+        setLongitud(position.coords.longitude);
+
+        console.log(
+          position.coords.latitude,
+          position.coords.longitude
+        );
+
+      },
+
+      (error) => {
+
+        console.error(error);
+
+      }
+
+    );
+
+  }, []);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -72,21 +100,28 @@ export default function ReportIncident() {
 
           usuarioEmail: user.email,
           usuarioId: user.uid,
-          
+
 
           estado: 'Reportado',
 
-          fechaCreacion: serverTimestamp()
+          fechaCreacion: serverTimestamp(),
 
+          latitud,
+          longitud
         }
       );
+      console.log("UID USUARIO:", user.uid);
 
       console.log("Incidente guardado");
+
+      alert("Incidencia reportada correctamente");
 
       setTipo('');
       setDescripcion('');
       setUbicacionTexto('');
       setImagen(null);
+
+      window.location.href = "/my-incidents";
 
     } catch (error) {
 
