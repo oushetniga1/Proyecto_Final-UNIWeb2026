@@ -135,7 +135,7 @@ export default function Dashboard() {
 
         {/* LOGO */}
         <img
-          src="./img/LOGOUAWA.png"
+          src="./public/LOGOUAWA.png"
           alt="Logo Universidad"
           className="
             absolute
