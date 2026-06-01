@@ -66,7 +66,7 @@ function App() {
                 element={<Statistics />}
               />
 
-              {/* 🔥 MUEVELO AQUI */}
+              {/* MUEVELO AQUI */}
               <Route
                 path="/map"
                 element={<MapIncidents />}
